@@ -1,0 +1,45 @@
+os:
+    - linux
+    - osx
+
+language: cpp
+
+compiler:
+    - clang
+    - gcc
+
+git:
+    depth: 1
+
+tags: true
+
+sudo: true
+
+addons:
+    apt:
+        - cmake
+        - cmake-data
+        - rpm
+
+script:
+    - cmake -H. -Bbuild -DCMAKE_INSTALL_PREFIX=install
+    - cmake --build build/
+    - cd build/
+    - cpack --config CPackSourceConfig.cmake
+    - if [ "${TRAVIS_OS_NAME}" = "osx" ]; then cpack -G DragNDrop; fi
+    - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then cpack -G RPM; cpack -G DEB; fi
+    - cd ..
+
+deploy:
+    provider: releases
+    api_key: c27722568bda333b61199e840dfcb96e7495addd
+    file_glob: true
+    file:
+        - "install/packages/*.deb"
+        - "install/packages/*.rpm"
+        - "install/packages/*.dmg"
+        - "install/packages/*.tar.gz"
+        - "install/packages/*.zip"
+    skip_cleanup: true
+    on:
+        tags: true
